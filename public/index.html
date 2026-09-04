@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full overflow-hidden">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<title>TikTok JSON Uploader · JSON Blob DB</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+	<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Caveat:wght@700&display=swap" rel="stylesheet">
+	<style>
+	*::-webkit-scrollbar { width: 0; height: 0; background: transparent; }
+	* { scrollbar-width: none; -ms-overflow-style: none; }
+	.clock-colon { animation: colon-blink 1s step-start infinite; }
+	@keyframes colon-blink { 50% { opacity: 0; } }
+	@keyframes spin { 100% { transform: rotate(360deg); } }
+	.slideshow-loader i { animation: spin 1s linear infinite; }
+	#unlock-modal { transition: opacity 0.3s ease; }
+	#unlock-modal.hidden { opacity: 0; pointer-events: none; }
+	#unlock-modal:not(.hidden) { opacity: 1; pointer-events: auto; }
+	#unlock-modal:not(.hidden) .modal-box { opacity: 1; transform: scale(1) translateY(0); }
+	#unlock-modal.hidden .modal-box { opacity: 0; transform: scale(0.95) translateY(8px); }
+select {
+	appearance: none;
+	-webkit-appearance: none;
+	background-color: #1a2e36;
+	color: #e5e7eb;
+	border: 1px solid rgba(6, 182, 212, 0.3);
+	border-radius: 0.375rem;
+	padding: 0.25rem 2rem 0.25rem 0.5rem;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2306b6d4' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 0.5rem center;
+	background-size: 1rem;
+	cursor: pointer;
+}
+select:hover {
+	border-color: rgba(6, 182, 212, 0.7);
+}
+select:focus {
+	outline: none;
+	border-color: #06b6d4;
+	box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.5);
+}
+select option {
+	background-color: #0d1a1f;
+	color: #e5e7eb;
+}
+
+
+.custom-select {
+	position: relative;
+	width: 100%;
+	width: 170px;
+	max-width: 170px;
+}
+.custom-select-trigger {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
+	padding: 0.25rem 0.5rem;
+	background-color: #1a2e36;
+	color: #e5e7eb;
+	border: 1px solid rgba(6, 182, 212, 0.3);
+	border-radius: 0.375rem;
+	cursor: pointer;
+	font-size: 0.75rem;
+	line-height: 1rem;
+}
+.custom-select-trigger:hover {
+	border-color: rgba(6, 182, 212, 0.7);
+}
+.custom-select-arrow {
+	width: 0.75rem;
+	height: 0.75rem;
+	color: #06b6d4;
+	transition: transform 0.2s ease;
+}
+.custom-select.open .custom-select-arrow {
+	transform: rotate(180deg);
+}
+.custom-select-options {
+	position: absolute;
+	top: 100%;
+	left: 0;
+	width: 100%;
+	max-height: 200px;
+	overflow-y: auto;
+	background-color: #0d1a1f;
+	border: 1px solid rgba(6, 182, 212, 0.3);
+	border-radius: 0.375rem;
+	margin-top: 0.25rem;
+	z-index: 50;
+}
+.custom-select-option {
+	padding: 0.25rem 0.5rem;
+	color: #e5e7eb;
+	cursor: pointer;
+	font-size: 0.75rem;
+}
+.custom-select-option:hover {
+	background-color: rgba(6, 182, 212, 0.2);
+}
+.custom-select-option.selected {
+	background-color: rgba(6, 182, 212, 0.3);
+}
+.custom-select-options {
+	z-index: 1000;
+}
+.custom-select.disabled .custom-select-trigger {
+	opacity: 0.6;
+	cursor: not-allowed;
+	pointer-events: none;
+	border-color: rgba(6, 182, 212, 0.15);
+	background-color: #16242a;
+	color: #7b8a90;
+}
+.custom-select-option.disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+	background-color: transparent;
+	pointer-events: none;
+}
+</style>
+</head>
+<body class="h-full overflow-hidden flex flex-col bg-[#0d1a1f] text-[#e5e7eb] antialiased">
+	<header class="flex-shrink-0 h-9 bg-[#0d1a1f] text-white shadow-[0_2px_10px_rgba(1,74,96,0.5)] flex items-center justify-between px-2 z-20 border-b border-[#1a3a42]">
+		<div class="flex items-center gap-1.5">
+			<i class="fa-brands fa-tiktok text-[16px] text-cyan-400"></i>
+			<span class="font-['Poppins',sans-serif] font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-white to-cyan-200 tracking-wide drop-shadow-[0_0_8px_rgba(6,182,212,0.5)] text-[15px]">TikTok JSON Uploader</span>
+		</div>
+		<div class="flex items-center gap-1.5">
+			<button id="exit-btn" class="bg-cyan-800/50 hover:bg-cyan-700 text-white px-1.5 py-0.5 rounded border border-cyan-600/30 transition-colors text-[12px]"><i class="fa-solid fa-right-from-bracket w-3.5 text-center text-[14px]"></i> <span>Exit</span></button>
+		</div>
+	</header>
+	<main class="flex-1 overflow-hidden flex flex-col p-2 gap-1 relative bg-transparent min-h-0">
+		<div id="content-header" class="flex-shrink-0 flex items-center justify-between border-b border-white/5 px-2 mb-0.5">
+			<div>
+				<h1 id="page-title" class="text-xs font-bold tracking-tight text-white drop-shadow-[0_1px_4px_rgba(1,74,96,0.8)]">TIKTOK</h1>
+				<p id="content-desc" class="text-cyan-100/70 text-[8px] mt-0.5 drop-shadow">JSON Data Blob Manager</p>
+			</div>
+			<div class="flex items-center gap-2">
+				<button id="refresh-btn" class="bg-white/10 backdrop-blur-md hover:bg-white/20 text-white px-2 py-1 rounded border border-white/20 transition-colors flex items-center gap-1 shadow-md"><i class="fa-solid fa-rotate text-[8px]"></i> <span class="hidden sm:inline text-[9px]">Refresh</span></button>
+			</div>
+		</div>
+		<div class="bg-[#1a2e36] rounded-lg p-1 w-full flex-1 shadow-xl border border-cyan-400/30 overflow-hidden flex flex-col">
+			<div id="tab-container" class="flex-1 overflow-hidden min-h-0 relative">
+				<div id="tab-pane-code" class="h-full min-h-0 overflow-hidden flex flex-col">
+					<div class="flex flex-col gap-2 p-1 h-full overflow-hidden">
+<div class="bg-[#1a2e36] rounded-lg p-0.5 w-full mb-1 text-[9px] shadow-xl border border-cyan-400/30 overflow-visible text-cyan-300 flex items-center gap-2 border-b border-white/10 flex-nowrap min-w-0 gap-2">
+<div class="flex gap-2 ">
+<button id="test-connection-btn" class="bg-cyan-800/50 hover:bg-cyan-700 text-white px-2 py-0.5 rounded text-[9px] border border-cyan-600/30 transition-colors"><i class="fa-solid fa-link mr-1"></i> Test</button>
+<span id="test-result" class="text-[9px] text-cyan-300 self-center hidden"></span>
+</div>
+
+<div class="flex-1 flex items-center h-full">
+<!--
+<select id="fileSelect" class="bg-[#1a2e36] border border-cyan-400/30 rounded-md p-0.5 px-1 text-xs text-cyan-100 focus:outline-none focus:border-cyan-400/70 appearance-none cursor-pointer max-w-[100px] h-full max-h-full truncate">
+									<option value="">Select File</option>
+								</select>
+-->
+<div id="fileSelect" class="custom-select disabled">
+	<button type="button" class="custom-select-trigger">
+		<span class="custom-select-value">Select File</span>
+		<svg class="custom-select-arrow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+			<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 8l4 4 4-4" />
+		</svg>
+	</button>
+	<div class="custom-select-options hidden">
+		<div class="custom-select-option" data-value="">Select File</div>
+	</div>
+</div>
+</div>
+							<span class="flex items-center gap-1 mr-1 border-r border-cyan-800/30 pr-2">
+								<span id="conn" class="w-1.5 h-1.5 rounded-full bg-red-800 animate-pulse"></span>
+								<span class="text-[8px] text-cyan-200/70 hidden sm:inline">Live</span>
+							</span>
+						</div>
+						<div class="flex-1 flex-shrink-0 bg-[#0d1a1f] rounded p-1 border border-white/10 overflow-hidden min-h-0">
+							<pre id="json" class="bg-transparent border border-cyan-500/30 rounded px-1 py-0.5 text-[10px] text-cyan-200 w-full font-mono focus:outline-none focus:border-cyan-400 h-full overflow-x-hidden overflow-y-auto hidden"></pre>
+							<div id="jsonLoader" class="relative bg-transparent border border-cyan-500/30 rounded px-1 py-0.5 text-[10px] text-cyan-200 w-full font-mono focus:outline-none focus:border-cyan-400 h-full overflow-hidden">
+								<div id="json-loading-indicator" class="absolute inset-0 flex items-center justify-center bg-[#0d1a1f]/80 z-10"><i class="fa-solid fa-spinner fa-spin text-cyan-400 text-2xl"></i></div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div id="tab-pane-tiktok" class="h-full min-h-0 overflow-hidden flex flex-col hidden">
+					<div class="flex flex-col gap-2 p-1 h-full overflow-hidden">
+						<div class="flex-1 flex-shrink-0 bg-[#0d1a1f] rounded p-1 border border-white/10 overflow-hidden min-h-0">
+							<div id="drop-zone" class="w-full rounded-lg bg-white/5 backdrop-blur-sm border-2 border-dashed border-white/30 flex flex-col items-center justify-center p-4 text-center text-white/70 transition-colors cursor-pointer hover:border-cyan-400/50">
+								<i class="fa-solid fa-cloud-upload-alt text-4xl text-cyan-300 mb-2"></i>
+								<p id="file-name" class="text-[11px] font-medium">Drag & drop tiktok json here</p>
+								<p id="file-details" class="text-[8px] text-white/50">or click to select files</p>
+								<p id="file-date" class="text-[8px] text-white/50">last modified date</p>
+								<p id="file-type" class="text-[8px] text-white/50">file type</p>
+								<input type="file" id="file-input" accept=".json,application/json" class="hidden" />
+							</div>
+<div class="w-full flex justify-between mt-2">
+<button id="upload-btn" class="bg-[#057c94] hover:bg-[#046a80] text-white px-3 py-1 rounded text-[10px] border border-cyan-600/30 transition-colors shadow-sm self-center flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"><i class="fa-solid fa-upload"></i> Upload</button>
+<div class="py-1 px-1 text-cyan-300 truncate font-mono flex-1">
+<input type="text" id="file-prefix" class="bg-transparent border border-cyan-500/30 rounded px-1 py-0.5 text-[10px] text-cyan-200 w-full font-mono focus:outline-none focus:border-cyan-400" value="jafernegery"></div>
+								<button id="clear-btn" class="bg-white/10 hover:bg-white/20 text-white/80 px-3 py-1 rounded text-[10px] border border-white/10 transition-colors flex items-center gap-2"><i class="fa-solid fa-times"></i> Clear</button>
+							</div>
+<div id="upload-progress" class="w-full max-w-xs mt-3 hidden">
+<div class="w-full bg-white/20 rounded-full h-1.5">
+<div id="progress-bar" class="bg-cyan-400 h-1.5 rounded-full transition-all duration-300" style="width:0%"></div>
+</div>
+<div class="w-full flex justify-between mt-2">
+<span id="progress-text" class="text-[8px] text-cyan-300">0%</span>
+<span id="speed-text" class="text-[8px] text-cyan-300">0</span>
+</div>
+</div>
+</div>
+					</div>
+				</div>
+			</div>
+			<div id="tab-bar" class="flex-shrink-0 flex items-center justify-around border-t border-white/10 bg-white/5 backdrop-blur-sm rounded-t py-0.5 px-1 gap-1 mt-0.5 h-7">
+				<button id="tab-code" class="tab-btn flex-1 text-center py-0.5 text-white border-b-[1.5px] border-cyan-400 font-medium text-[12px] transition-colors" data-title="JSON data code"> <i class="fa-solid fa-video mr-1 text-[7px] text-cyan-300"></i><span>Code</span> </button>
+				<button id="tab-tiktok" class="tab-btn flex-1 text-center py-0.5 text-white/60 border-b-[1.5px] border-transparent hover:text-white hover:border-cyan-400/50 text-[12px] transition-colors" data-title="Tiktok json upload"> <i class="fa-brands fa-tiktok mr-1 text-[7px]"></i><span>TikTok</span> </button>
+			</div>
+		</div>
+	</main>
+	<footer class="flex-shrink-0 h-7 bg-[#0d1a1f] text-cyan-100/70 shadow-[0_-2px_10px_rgba(1,74,96,0.5)] flex items-center justify-between z-20 border-t border-[#1a3a42] px-2">
+		<div class="flex items-center gap-3"> <span class="flex items-center gap-1 mr-1 border-r border-cyan-800/30 pr-2"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> <span class="text-[8px] text-cyan-200/70 hidden sm:inline">Live</span> </span> <a href="license.html" class="hover:text-white transition-colors text-[8px]"><i class="fa-regular fa-circle-question mr-0.5 text-[8px]"></i> License</a> <a href="docs.html" class="hover:text-white transition-colors text-[8px]"><i class="fa-regular fa-lock mr-0.5 text-[8px] ml-[3px]"></i> Documentation</a> <span class="text-white/20 text-[8px]">© 2026</span> </div>
+		<div id="footer-clock" class="font-mono text-[8px] text-cyan-200/80 tracking-wide select-none flex items-center"> <span id="clock-day" class="font-sans opacity-70 mr-1">Wed,</span> <span id="clock-hours">02</span> <span id="clock-colon" class="clock-colon">:</span> <span id="clock-minutes">35</span> <span id="clock-ampm" class="ml-0.5">PM</span> </div>
+	</footer>
+	<div id="unlock-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-md z-[99999] flex items-center justify-center transition-opacity duration-300">
+		<div class="modal-box bg-[#0d1a1f]/95 border border-cyan-400/30 rounded-2xl p-6 max-w-[380px] w-[90%] shadow-2xl text-center transform transition-all duration-300 scale-95 translate-y-2 opacity-0">
+			<div class="text-5xl text-cyan-400 mb-3"><i class="fa-solid fa-lock"></i></div>
+			<h2 class="text-white text-base font-semibold mb-1 tracking-wide">🔐 Unlock TikTok Uploader</h2>
+			<p class="text-cyan-100/60 text-[10px] mb-4 max-w-[280px] mx-auto">Enter the password to decrypt your stored API key and access your video database.</p>
+			<input type="password" id="unlock-password" class="w-full bg-[#0d1a1f] border border-cyan-500/40 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-400 transition-colors mb-3 placeholder:text-white/30" placeholder="Enter password..." autofocus />
+			<div id="unlock-error" class="text-red-400 text-[10px] mb-3 hidden flex items-center justify-center gap-1.5"> <i class="fa-solid fa-circle-exclamation"></i> <span id="unlock-error-msg">Invalid password. Please try again.</span> </div>
+			<button id="unlock-btn" class="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-2.5 rounded-lg text-sm font-semibold shadow-md transition-colors w-full flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"> <i class="fa-solid fa-key"></i> <span>Unlock</span> </button>
+			<p class="text-white/20 text-[7px] mt-4 tracking-wider">🔑 encrypted · secure</p>
+		</div>
+	</div>
+	<script src="key-encryptor.js"></script>
+	<script src="auth-module.js"></script>
+	<script src="json-blob-uploader.js"></script>
+	<script src="auth-ui.js"></script>
+	<script>
+	(function() {
+		'use strict';
+
+		const UPLOAD_CATEGORY = 'tiktok';
+		let uploader = null;
+
+		const dropZone = document.getElementById('drop-zone');
+		const fileInput = document.getElementById('file-input');
+		const fileNameEl = document.getElementById('file-name');
+		const fileDetailsEl = document.getElementById('file-details');
+		const fileType = document.getElementById('file-type');
+		const filePrefix = document.getElementById('file-prefix');
+		const fileDate = document.getElementById('file-date');
+		const uploadBtn = document.getElementById('upload-btn');
+		const clearBtn = document.getElementById('clear-btn');
+		const progressDiv = document.getElementById('upload-progress');
+		const progressBar = document.getElementById('progress-bar');
+		const progressText = document.getElementById('progress-text');
+		// const fileSelect = document.getElementById('fileSelect');
+		const jsonPre = document.getElementById('json');
+		const jsonLoader = document.getElementById('jsonLoader');
+
+		let selectedFile = null;
+
+		function fmtSize(bytes) {
+			if (!bytes) return '0 B';
+			const k = 1024, s = ['B','KB','MB','GB'];
+			const i = Math.floor(Math.log(bytes) / Math.log(k));
+			return (bytes / Math.pow(k, i)).toFixed(1) + ' ' + s[i];
+		}
+
+		function fmtDate(ts) {
+			if (!ts) return '—';
+			const d = new Date(ts);
+			const pad = n => String(n).padStart(2,'0');
+			return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+		}
+
+		function fmtDates(ts) {
+			if (!ts) return '—';
+			const d = new Date(ts);
+			const pad = n => String(n).padStart(2, '0');
+			return d.getFullYear() + (pad(d.getMonth()+1)) + pad(d.getDate());
+		}
+
+		function updateFileDisplay(file) {
+			if (!file) {
+				fileNameEl.textContent = 'Drag & drop tiktok json here';
+				fileDetailsEl.textContent = 'or click to select files';
+				fileType.textContent = 'file type';
+				fileDate.textContent = 'last modified date';
+				return;
+			}
+			fileNameEl.textContent = file.name;
+			fileType.textContent = `${file.type || 'unknown type'}`;
+			fileDetailsEl.textContent = `${fmtSize(file.size)}`;
+			fileDate.textContent = `${fmtDate(file.lastModified)}`;
+			filePrefix.value = filePrefix.value + '_' + `${fmtDates(file.lastModified)}` + '.json';
+		}
+
+		function clearSelection() {
+			selectedFile = null;
+			fileInput.value = '';
+			updateFileDisplay(null);
+			uploadBtn.disabled = true;
+			progressDiv.classList.add('hidden');
+			progressBar.style.width = '0%';
+			progressText.textContent = '0%';
+		}
+
+		function setProgress(percent) {
+			progressDiv.classList.remove('hidden');
+			progressBar.style.width = percent + '%';
+			progressText.textContent = percent + '%';
+		}
+
+		function showMessage(msg, isError = false) {
+			progressDiv.classList.remove('hidden');
+			progressText.textContent = msg;
+			progressText.className = isError ? 'text-[8px] text-red-400' : 'text-[8px] text-cyan-300';
+		}
+
+		async function handleUpload() {
+			if (!selectedFile) { showMessage('No file selected', true); return; }
+			if (!uploader) { showMessage('Uploader not initialised. Unlock first.', true); return; }
+
+			let customName = filePrefix.value.trim();
+			if (customName && !customName.toLowerCase().endsWith('.json')) customName += '.json';
+			if (!customName) customName = selectedFile.name;
+
+			const customFile = new File([selectedFile], customName, { type: selectedFile.type, lastModified: selectedFile.lastModified });
+
+			uploadBtn.disabled = true;
+			clearBtn.disabled = true;
+			setProgress(0);
+
+			try {
+				//const result = await uploader.uploadFileChunked(customFile, (percent) => setProgress(percent), UPLOAD_CATEGORY, { size: customFile.size, name: customFile.name, type: customFile.type });
+				
+				const result = await uploader.uploadFileChunked(customFile, (percent, speedMbps) => {
+					setProgress(percent);
+					document.getElementById('speed-text').textContent = speedMbps.toFixed(2) + ' Mbit/s';
+				}, UPLOAD_CATEGORY, {size: customFile.size, name: customFile.name, type: customFile.type});
+				
+				console.log('Upload success:', result);
+				setProgress(100);
+				showMessage('Upload complete');
+				setTimeout(() => clearSelection(), 1500);
+				populateFileSelect();
+			} catch (err) {
+				console.error('Upload failed:', err);
+				showMessage('Upload failed: ' + err.message, true);
+			} finally {
+				uploadBtn.disabled = false;
+				clearBtn.disabled = false;
+			}
+		}
+
+		async function populateFileSelects() {
+			if (!uploader) return;
+			fileSelect.innerHTML = '<option value="">Select File</option>';
+			try {
+				const blobs = await uploader.listBlobs();
+				blobs.forEach(blob => {
+					const option = document.createElement('option');
+					option.value = blob.url;
+					option.textContent = blob.pathname.split('/').pop();
+					option.dataset.pathname = blob.pathname;
+					fileSelect.appendChild(option);
+				});
+			} catch (err) {
+				console.error('Failed to load file list:', err);
+			}
+		}
+		
+		async function populateFileSelect() {
+	if (!uploader || !fileSelect) return;
+	
+	const trigger = fileSelect.querySelector('.custom-select-trigger');
+	const valueSpan = fileSelect.querySelector('.custom-select-value');
+	const optionsContainer = fileSelect.querySelector('.custom-select-options');
+	
+	// Clear existing options except placeholder
+	optionsContainer.innerHTML = '<div class="custom-select-option" data-value="">Select File</div>';
+	valueSpan.textContent = 'Select File';
+	
+	try {
+		const blobs = await uploader.listBlobs();
+		blobs.forEach(blob => {
+			const option = document.createElement('div');
+			option.className = 'custom-select-option';
+			option.dataset.value = blob.url;
+			option.dataset.pathname = blob.pathname;
+			option.textContent = blob.pathname.split('/').pop();
+			option.addEventListener('click', () => {
+				// Update selected value
+				valueSpan.textContent = option.textContent;
+				// Store selected URL
+				fileSelect.dataset.value = blob.url;
+				// Close dropdown
+				fileSelect.classList.remove('open');
+				optionsContainer.classList.add('hidden');
+				// Trigger change event manually
+				const event = new CustomEvent('change');
+				fileSelect.dispatchEvent(event);
+			});
+			optionsContainer.appendChild(option);
+			fileSelect.classList.remove('disabled');
+		});
+	} catch (err) {
+		console.error('Failed to load file list:', err);
+	}
+}
+		
+		const fileSelect = document.getElementById('fileSelect');
+		const trigger = fileSelect.querySelector('.custom-select-trigger');
+		const optionsContainer = fileSelect.querySelector('.custom-select-options');
+		
+		trigger.addEventListener('click', (e) => {
+			e.stopPropagation();
+			fileSelect.classList.toggle('open');
+			optionsContainer.classList.toggle('hidden');
+});
+
+document.addEventListener('click', (e) => {
+	if (!fileSelect.contains(e.target)) {
+		fileSelect.classList.remove('open');
+		optionsContainer.classList.add('hidden');
+	}
+});
+
+fileSelect.addEventListener('change', async () => {
+	//const selectedUrl = fileSelect.value;
+	const selectedUrl = fileSelect.dataset.value;
+	if (!selectedUrl) return;
+	jsonPre.classList.add('hidden');
+	jsonLoader.classList.remove('hidden');
+	try {
+		const data = await uploader.readJsonInWorker(selectedUrl);
+		jsonPre.textContent = JSON.stringify(Object.keys(data), null, 2);
+		jsonPre.classList.remove('hidden');
+		jsonLoader.classList.add('hidden');
+	} catch (err) {
+		console.error('Failed to load selected file:', err);
+		jsonLoader.classList.add('hidden');
+		jsonPre.classList.remove('hidden');
+		jsonPre.textContent = 'Error loading file: ' + err.message;
+	}
+});
+
+		dropZone.addEventListener('click', () => fileInput.click());
+		dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-cyan-400', 'bg-cyan-400/10'); });
+		dropZone.addEventListener('dragleave', () => dropZone.classList.remove('border-cyan-400', 'bg-cyan-400/10'));
+		dropZone.addEventListener('drop', (e) => {
+			e.preventDefault();
+			dropZone.classList.remove('border-cyan-400', 'bg-cyan-400/10');
+			const files = e.dataTransfer.files;
+			if (files.length > 0) {
+				selectedFile = files[0];
+				updateFileDisplay(selectedFile);
+				uploadBtn.disabled = false;
+			}
+		});
+		fileInput.addEventListener('change', () => {
+			if (fileInput.files.length > 0) {
+				selectedFile = fileInput.files[0];
+				updateFileDisplay(selectedFile);
+				uploadBtn.disabled = false;
+			} else {
+				clearSelection();
+			}
+		});
+		uploadBtn.addEventListener('click', handleUpload);
+		clearBtn.addEventListener('click', clearSelection);
+
+		window.addEventListener('auth:ready', (e) => {
+			uploader = e.detail.uploader;
+			populateFileSelect();
+		});
+
+		document.addEventListener('DOMContentLoaded', () => {
+			function setActiveTab(tabBtn) {
+				const common = 'flex-1 text-center py-0.5 text-[9px] transition-colors';
+				const active = 'text-white border-b-[1.5px] border-cyan-400 font-medium';
+				const inactive = 'text-white/60 border-b-[1.5px] border-transparent hover:text-white hover:border-cyan-400/50';
+				document.querySelectorAll('#tab-bar .tab-btn').forEach(btn => {
+					const icon = btn.querySelector('i');
+					if(btn === tabBtn) {
+						btn.className = `tab-btn ${common} ${active}`;
+						if(icon) icon.classList.add('text-cyan-300');
+					} else {
+						btn.className = `tab-btn ${common} ${inactive}`;
+						if(icon) icon.classList.remove('text-cyan-300');
+					}
+				});
+				document.querySelectorAll('#tab-container > div').forEach(p => p.classList.add('hidden'));
+				const paneId = 'tab-pane-' + tabBtn.id.replace('tab-', '');
+				document.getElementById(paneId).classList.remove('hidden');
+			}
+			document.querySelectorAll('#tab-bar .tab-btn').forEach(btn => btn.addEventListener('click', () => setActiveTab(btn)));
+		});
+
+		uploadBtn.disabled = true;
+	})();
+	</script>
+</body>
+</html>
